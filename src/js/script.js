@@ -17,6 +17,20 @@ var  mouse = {
   }
 };
 
+var buttonRestart = {
+  x: 10,
+  y: 470,
+  width: 80,
+  height: 20,
+  color: '#2C444D',
+  text: 'restart',
+  textX: 20,
+  textY: 486,
+  textColor: '#0095DD',
+  font: '20px Georgia',
+  pressed: false
+};
+
 function Ball(x, y, size = 15, color = '#0095DD') {
   this.x = x;
   this.y = y;
@@ -32,14 +46,14 @@ var balls = [];
 if (localStorage.getItem('savedData')) {
   balls = JSON.parse(localStorage.getItem('savedData'));
 } else {
-  for (var i = 0; i < 6; i++) {
+  addBalls();
+}
+
+function addBalls(value = 6) {
+  for (var i = 0; i < value; i++) {
     balls.push(new Ball(30 + (40 * i), 200));
   }
 }
-
-// for (var i = 0; i < 6; i++) {
-//   balls.push(new Ball(30 + (40 * i), 200));
-// }
 
 document.addEventListener('mousemove', mouseMoveHandler);
 document.addEventListener('mouseup', mouseUpHandler);
@@ -62,10 +76,23 @@ function mouseMoveHandler(e) {
 
 function mouseUpHandler() {
   isCursorOnBall();
+  buttonRestart.pressed = false;
 }
 
 function mouseDownHandler() {
   isCursorOnBall();
+  isRestartPressed();
+}
+
+function isRestartPressed() {
+  if (mouse.x > buttonRestart.x &&
+    mouse.x < buttonRestart.x + buttonRestart.width &&
+    mouse.y < buttonRestart.y + buttonRestart.height &&
+    mouse.y > buttonRestart.y) {
+    buttonRestart.pressed = true;
+    balls = [];
+    addBalls();
+  }
 }
 
 function isCursorOnBall() {
@@ -74,23 +101,15 @@ function isCursorOnBall() {
     var dy2 = Math.pow((mouse.y - ball.y), 2);
     var dist = Math.sqrt(dx2 + dy2);
     if (dist <= ball.size) {
-      ball.selected = ball.selected ? false : true;
+      ball.selected = !ball.selected;
       ball.shiftX = mouse.x - ball.x;
       ball.shiftY = mouse.y - ball.y;
     }
   });
 }
 
-function drawTable() {
-  ctx.beginPath();
-  ctx.moveTo(canvas.width / 2, 0);
-  ctx.lineTo(canvas.width / 2, canvas.height);
-  ctx.stroke();
-  ctx.closePath();
-}
-
-function moveBalls(maxSpeed = 6) {
-  for (i = 0; i < balls.length; i++) {
+function moveBalls(maxSpeed = 4) {
+  for (var i = 0; i < balls.length; i++) {
     for (var j = 1; j < balls.length; j++) {
       if (balls[i].x > canvas.width / 2 && !balls[i].selected) {
         if (balls[i].x + balls[i].vectorX > canvas.width - balls[i].size ||
@@ -108,10 +127,10 @@ function moveBalls(maxSpeed = 6) {
           balls[j].vectorY = -balls[j].vectorY;
         }
         if (Math.abs(balls[i].vectorX) > maxSpeed) {
-          balls[i].vectorX = balls[i].vectorX / 2;
+          balls[i].vectorX = maxSpeed;
         }
         if (Math.abs(balls[i].vectorY) > maxSpeed) {
-          balls[i].vectorY = balls[i].vectorY / 2;
+          balls[i].vectorY = maxSpeed;
         }
         balls[i].x += balls[i].vectorX;
         balls[i].y += balls[i].vectorY;
@@ -128,6 +147,39 @@ function isCollised(b1, b2) {
     return true;
   }
   return false;
+}
+
+function drawButton() {
+  if (buttonRestart.pressed) {
+    ctx.beginPath();
+    ctx.strokeStyle = buttonRestart.color;
+    ctx.strokeRect(buttonRestart.x + 2, buttonRestart.y + 1, buttonRestart.width - 4, buttonRestart.height - 2);
+    ctx.font = '18px Georgia';
+    ctx.fillStyle = buttonRestart.textColor;
+    ctx.fillText(buttonRestart.text, buttonRestart.textX + 3, buttonRestart.textY - 1);
+    ctx.closePath();
+  } else {
+    ctx.beginPath();
+    ctx.strokeStyle = buttonRestart.color;
+    ctx.strokeRect(buttonRestart.x, buttonRestart.y, buttonRestart.width, buttonRestart.height);
+    ctx.font = buttonRestart.font;
+    ctx.fillStyle = buttonRestart.textColor;
+    ctx.fillText(buttonRestart.text, buttonRestart.textX, buttonRestart.textY);
+    ctx.closePath();
+  }
+}
+
+function drawTable() {
+  ctx.beginPath();
+  ctx.moveTo(canvas.width / 2, 0);
+  ctx.lineTo(canvas.width / 2, canvas.height);
+  ctx.stroke();
+
+  ctx.font = '32px Georgia';
+  ctx.fillText('Static block', 100, 30);
+  ctx.fillText('Bouncing block', 500, 30);
+
+  drawButton();
 }
 
 function drawBalls() {
