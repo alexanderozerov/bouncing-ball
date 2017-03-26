@@ -6,3 +6,4 @@
 ### Additional features
 * save state after reload
 * set acceleration with mouse
+* add balls collision

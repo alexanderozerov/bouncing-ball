@@ -32,10 +32,14 @@ var balls = [];
 if (localStorage.getItem('savedData')) {
   balls = JSON.parse(localStorage.getItem('savedData'));
 } else {
-  for (var i = 0; i < 9; i++) {
+  for (var i = 0; i < 6; i++) {
     balls.push(new Ball(30 + (40 * i), 200));
   }
 }
+
+// for (var i = 0; i < 6; i++) {
+//   balls.push(new Ball(30 + (40 * i), 200));
+// }
 
 document.addEventListener('mousemove', mouseMoveHandler);
 document.addEventListener('mouseup', mouseUpHandler);
@@ -50,8 +54,8 @@ function mouseMoveHandler(e) {
     if (ball.selected) {
       ball.x = mouse.x - ball.shiftX;
       ball.y = mouse.y - ball.shiftY;
-      ball.vectorX = mouse.vectorX;
-      ball.vectorY = mouse.vectorY;
+      ball.vectorX = mouse.vectorX * 0.3;
+      ball.vectorY = mouse.vectorY * 0.3;
     }
   });
 }
@@ -77,7 +81,7 @@ function isCursorOnBall() {
   });
 }
 
-function splitTable() {
+function drawTable() {
   ctx.beginPath();
   ctx.moveTo(canvas.width / 2, 0);
   ctx.lineTo(canvas.width / 2, canvas.height);
@@ -85,22 +89,49 @@ function splitTable() {
   ctx.closePath();
 }
 
-function move(ball) {
-  if (ball.x > canvas.width / 2 && !ball.selected) {
-    if (ball.x + ball.vectorX > canvas.width - ball.size || ball.x + ball.vectorX < canvas.width / 2 + ball.size) {
-      ball.vectorX = -ball.vectorX;
+function moveBalls(maxSpeed = 6) {
+  for (i = 0; i < balls.length; i++) {
+    for (var j = 1; j < balls.length; j++) {
+      if (balls[i].x > canvas.width / 2 && !balls[i].selected) {
+        if (balls[i].x + balls[i].vectorX > canvas.width - balls[i].size ||
+          balls[i].x + balls[i].vectorX < canvas.width / 2 + balls[i].size) {
+          balls[i].vectorX = -balls[i].vectorX;
+        }
+        if (balls[i].y + balls[i].vectorY > canvas.height - balls[i].size ||
+          balls[i].y + balls[i].vectorY < balls[i].size) {
+          balls[i].vectorY = -balls[i].vectorY;
+        }
+        if (isCollised(balls[i], balls[j])) {
+          balls[i].vectorX = -balls[i].vectorX;
+          balls[i].vectorY = -balls[i].vectorY;
+          balls[j].vectorX = -balls[j].vectorX;
+          balls[j].vectorY = -balls[j].vectorY;
+        }
+        if (Math.abs(balls[i].vectorX) > maxSpeed) {
+          balls[i].vectorX = balls[i].vectorX / 2;
+        }
+        if (Math.abs(balls[i].vectorY) > maxSpeed) {
+          balls[i].vectorY = balls[i].vectorY / 2;
+        }
+        balls[i].x += balls[i].vectorX;
+        balls[i].y += balls[i].vectorY;
+      }
     }
-    if (ball.y + ball.vectorY > canvas.height - ball.size || ball.y + ball.vectorY < ball.size) {
-      ball.vectorY = -ball.vectorY;
-    }
-    ball.x += ball.vectorX;
-    ball.y += ball.vectorY;
   }
+}
+
+function isCollised(b1, b2) {
+  var dx2 = Math.pow((b1.x - b2.x), 2);
+  var dy2 = Math.pow((b1.y - b2.y), 2);
+  var dist = Math.sqrt(dx2 + dy2);
+  if (dist <= b1.size + b2.size && dist > 0) {
+    return true;
+  }
+  return false;
 }
 
 function drawBalls() {
   balls.forEach(function (ball) {
-    move(ball);
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
     ctx.fillStyle = ball.color;
@@ -111,9 +142,10 @@ function drawBalls() {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  splitTable();
+  drawTable();
   drawBalls();
   mouse.update();
+  moveBalls();
   localStorage.setItem('savedData', JSON.stringify(balls));
 }
 
