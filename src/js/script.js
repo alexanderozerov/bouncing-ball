@@ -3,7 +3,18 @@ var ctx = canvas.getContext('2d');
 
 var  mouse = {
   x: 0,
-  y: 0
+  y: 0,
+
+  oldX: 0,
+  oldY: 0,
+
+  update: function () {
+    this.vectorX = this.x - this.oldX;
+    this.vectorY = this.y - this.oldY;
+
+    this.oldX = this.x;
+    this.oldY = this.y;
+  }
 };
 
 function Ball(x, y, size = 15, color = '#0095DD') {
@@ -39,6 +50,8 @@ function mouseMoveHandler(e) {
     if (ball.selected) {
       ball.x = mouse.x - ball.shiftX;
       ball.y = mouse.y - ball.shiftY;
+      ball.vectorX = mouse.vectorX;
+      ball.vectorY = mouse.vectorY;
     }
   });
 }
@@ -72,18 +85,22 @@ function splitTable() {
   ctx.closePath();
 }
 
+function move(ball) {
+  if (ball.x > canvas.width / 2 && !ball.selected) {
+    if (ball.x + ball.vectorX > canvas.width - ball.size || ball.x + ball.vectorX < canvas.width / 2 + ball.size) {
+      ball.vectorX = -ball.vectorX;
+    }
+    if (ball.y + ball.vectorY > canvas.height - ball.size || ball.y + ball.vectorY < ball.size) {
+      ball.vectorY = -ball.vectorY;
+    }
+    ball.x += ball.vectorX;
+    ball.y += ball.vectorY;
+  }
+}
+
 function drawBalls() {
   balls.forEach(function (ball) {
-    if (ball.x > canvas.width / 2 && !ball.selected) {
-      if (ball.x + ball.vectorX > canvas.width - ball.size || ball.x + ball.vectorX < canvas.width / 2 + ball.size) {
-        ball.vectorX = -ball.vectorX;
-      }
-      if (ball.y + ball.vectorY > canvas.height - ball.size || ball.y + ball.vectorY < ball.size) {
-        ball.vectorY = -ball.vectorY;
-      }
-      ball.x += ball.vectorX;
-      ball.y += ball.vectorY;
-    }
+    move(ball);
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
     ctx.fillStyle = ball.color;
@@ -96,6 +113,7 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   splitTable();
   drawBalls();
+  mouse.update();
   localStorage.setItem('savedData', JSON.stringify(balls));
 }
 
