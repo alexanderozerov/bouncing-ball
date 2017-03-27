@@ -75,7 +75,9 @@ function mouseMoveHandler(e) {
 }
 
 function mouseUpHandler() {
-  isCursorOnBall();
+  balls.forEach(function (ball) {
+    ball.selected = false;
+  });
   buttonRestart.pressed = false;
 }
 
@@ -101,7 +103,7 @@ function isCursorOnBall() {
     var dy2 = Math.pow((mouse.y - ball.y), 2);
     var dist = Math.sqrt(dx2 + dy2);
     if (dist <= ball.size) {
-      ball.selected = !ball.selected;
+      ball.selected = true;
       ball.shiftX = mouse.x - ball.x;
       ball.shiftY = mouse.y - ball.y;
     }
